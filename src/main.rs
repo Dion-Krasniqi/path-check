@@ -13,7 +13,7 @@ fn main() {
     println!("Shortest path from, {} to {} is {}", u, v, result); 
     let und_edges: Vec<(usize,usize)> = vec![(1,2),(2,5),(1,5),(2,4),(4,3)];
     let num_nodes: usize = 5;
-    let mut und_mat: Vec<Vec<usize>> = vec![vec![0usize;num_nodes];num_nodes];
+    let mut und_mat: Vec<Vec<usize>> = vec![vec![usize::MAX;num_nodes];num_nodes];
 
     for (u,v) in und_edges.iter() {
         und_mat[*u-1][*v-1] = 1;
@@ -21,7 +21,7 @@ fn main() {
     }
     println!("{:?}", und_mat);
 
-    naive_djikstra(&und_mat, 2, 3);
+    naive_djikstra(&und_mat, 1, 2);
 }
 fn mat_mul(a: &Vec<Vec<usize>>,
            b: &Vec<Vec<usize>>,
@@ -61,41 +61,39 @@ fn naive_djikstra(a: &Vec<Vec<usize>>,
                   target: usize,
 ) {
  let mut nodes = a.clone();
- let mut unvisited: Vec<(usize,usize)> = nodes[0].iter_mut()
-     .enumerate()
-     .map(|(idx,node)| (idx,usize::MAX)).collect();
- unvisited[start] = (start,0);
+ // nodes[start] as unvisited
  let mut cur_node = start;
+ nodes[start][cur_node] = 0;
+ let nodes_len = nodes[0].len();
  loop {
-    for i in 0..nodes[0].len() {
+    for i in 0..nodes_len {
+        if i == cur_node { continue;};
         if nodes[cur_node][i] == 1 {
-            nodes[i][cur_node] = 0;
-            if unvisited[cur_node].1 < unvisited[i].1 
+            if nodes[start][cur_node] < nodes[start][i] 
             {
-                unvisited[i].1 = unvisited[cur_node].1 + 1;
+                nodes[start][i] = nodes[start][cur_node] + 1;
             }
         }
-    } 
-    println!("{:?}", unvisited);
-    unvisited[cur_node].1 = usize::MAX;
-    if let Some((idx,_)) = unvisited.clone().iter_mut()
+    }
+    // mark visited
+    nodes[start][cur_node] = usize::MAX;
+    if let Some((idx,_)) = nodes[start].iter()
+        .enumerate()
         .min_by(|(_,a),(_,b)| a.cmp(b)) 
-            && unvisited[*idx].1 < usize::MAX {
-            if *idx == target { 
+            && nodes[start][idx] < usize::MAX {
+            if idx == target { 
                 println!("Shortest path from start to target is {}", 
-                    unvisited[*idx].1);
+                    nodes[start][idx]);
                 return; 
             };
-            cur_node = *idx;
+            cur_node = idx;
     } else { break;};
  }
- if unvisited[target].1 < usize::MAX { 
-                println!("Shortest path from start to target is {}", 
-                    unvisited[target].1);
-                return; 
-            };
- 
-
- println!("{:?}", unvisited);
+ if nodes[start][target] > 0 
+    &&  nodes[start][target] < usize::MAX { 
+            println!("Shortest path from start to target is {}", 
+                     nodes[start][target]);
+            return; 
+ };
  println!("No path");
 }
