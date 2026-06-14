@@ -1,3 +1,7 @@
+use std::collections::BinaryHeap;
+use std::cmp::Ordering;
+use std::cmp::Reverse;
+
 fn main() {
     let num_nodes: usize = 4;
     let mut adj_mat: Vec<Vec<usize>> = vec![vec![0usize;num_nodes];num_nodes];
@@ -22,6 +26,7 @@ fn main() {
     println!("{:?}", und_mat);
 
     naive_djikstra(&und_mat, 1, 2);
+    heap_djikstra(&und_mat, 1, 2);
 }
 fn mat_mul(a: &Vec<Vec<usize>>,
            b: &Vec<Vec<usize>>,
@@ -96,4 +101,49 @@ fn naive_djikstra(a: &Vec<Vec<usize>>,
             return; 
  };
  println!("No path");
+}
+#[derive(Eq,PartialEq,Clone,Debug)]
+// tag, distance
+struct Node(pub usize, pub usize);
+impl PartialOrd for Node {
+    fn partial_cmp(&self, other: &Node) -> Option<Ordering> {
+        Some(other.1.cmp(&self.1))
+    }
+}
+
+impl Ord for Node {
+    fn cmp(&self, other: &Node) -> Ordering {
+        other.1.cmp(&self.1)
+    }
+}
+fn heap_djikstra(a: &Vec<Vec<usize>>,
+                  start: usize,
+                  target: usize,
+) {
+    let mut dummy_start: Vec<Node> = (0..a[0].len())
+        .map(|e| Node(e,usize::MAX)).collect();
+    dummy_start[start] = Node(start, 0);
+    let mut unvisited:  BinaryHeap<Node> = BinaryHeap::
+        from(dummy_start);
+    let mut cur_node: Node = Node(start, 0);
+    loop {
+        let mut temp = unvisited.clone().into_vec();
+        temp.iter_mut().for_each(|n| {
+            if a[cur_node.0][n.0] == 1 {
+                if cur_node.1 < n.1 {
+                    n.1 = cur_node.1 + 1;
+                }
+            }
+        });
+        println!("{:?}", temp);
+        unvisited = BinaryHeap::from(temp);
+        cur_node = unvisited.pop().unwrap();
+        if cur_node.0 == target && cur_node.1 < usize::MAX { 
+            println!("Path is {}", cur_node.1);
+            return;
+        };
+        if unvisited.is_empty() { break; };
+        if cur_node.1 == usize::MAX { break; };
+    }
+    println!("Nada");
 }
